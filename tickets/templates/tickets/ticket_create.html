@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load role_tags %}
+{% block title %}Crea Ticket{% endblock %}
+
+{% block content %}
+<h2>Crea un nuovo Ticket</h2>
+
+{% if error %}
+<div class="alert alert-danger">
+    {{ error }}
+</div>
+{% endif %}
+
+<form method="POST" action="{% url 'ticket_create' %}">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label class="form-label">Titolo</label>
+        <input type="text" name="title" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Descrizione</label>
+        <textarea name="description" class="form-control" rows="4" required></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Priorità</label>
+        <select name="priority" class="form-select">
+            <option value="low">Bassa</option>
+            <option value="medium" selected>Media</option>
+            <option value="high">Alta</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Crea Ticket</button>
+</form>
+
+<a href="{% url 'ticket_list' %}" class="btn btn-secondary mt-3">Annulla</a>
+
+{% endblock %}

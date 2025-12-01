@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load role_tags %}
+{% include "tickets/components/ticket_filters.html" %}
+{% block title %}Ticket Assegnati a Me{% endblock %}
+
+{% block content %}
+<h2>Ticket assegnati a me</h2>
+{% include "tickets/components/ticket_filters.html" %}
+<table class="table table-striped mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Titolo</th>
+            <th>Stato</th>
+            <th>Azione</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for t in tickets %}
+        <tr>
+            <td>{{ t.id }}</td>
+            <td><a href="{% url 'ticket_detail' t.id %}">{{ t.title }}</a></td>
+            <td>{{ t.get_status_display }}</td>
+            <td>
+                {% if t.status == 'in_progress' %}
+                <a href="{% url 'ticket_close' t.id %}" class="btn btn-success btn-sm">
+                    Chiudi
+                </a>
+                {% else %}
+                -
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">Nessun ticket assegnato</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

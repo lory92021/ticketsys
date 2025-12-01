@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block content %}
+
+<h2 class="mb-4">Dashboard Report Attività Operatori</h2>
+
+<form method="get" class="row g-3 mb-4">
+
+    <!-- ✅ MESE (CON NOMI, NON NUMERI) -->
+    <div class="col-md-3">
+        <label>Mese</label>
+        <select name="month" class="form-control">
+            <option value="">Tutti</option>
+
+            <option value="1"  {% if selected_month == "1"  %}selected{% endif %}>Gennaio</option>
+            <option value="2"  {% if selected_month == "2"  %}selected{% endif %}>Febbraio</option>
+            <option value="3"  {% if selected_month == "3"  %}selected{% endif %}>Marzo</option>
+            <option value="4"  {% if selected_month == "4"  %}selected{% endif %}>Aprile</option>
+            <option value="5"  {% if selected_month == "5"  %}selected{% endif %}>Maggio</option>
+            <option value="6"  {% if selected_month == "6"  %}selected{% endif %}>Giugno</option>
+            <option value="7"  {% if selected_month == "7"  %}selected{% endif %}>Luglio</option>
+            <option value="8"  {% if selected_month == "8"  %}selected{% endif %}>Agosto</option>
+            <option value="9"  {% if selected_month == "9"  %}selected{% endif %}>Settembre</option>
+            <option value="10" {% if selected_month == "10" %}selected{% endif %}>Ottobre</option>
+            <option value="11" {% if selected_month == "11" %}selected{% endif %}>Novembre</option>
+            <option value="12" {% if selected_month == "12" %}selected{% endif %}>Dicembre</option>
+        </select>
+    </div>
+
+    <!-- ✅ ANNO -->
+    <div class="col-md-2">
+        <label>Anno</label>
+        <input
+            type="number"
+            name="year"
+            value="{{ selected_year|default_if_none:'' }}"
+            class="form-control"
+        >
+    </div>
+
+    <!-- ✅ OPERATORE -->
+    <div class="col-md-3">
+        <label>Operatore</label>
+        <select name="operator" class="form-control">
+            <option value="">Tutti</option>
+            {% for op in operators %}
+                <option value="{{ op.id }}"
+                    {% if selected_operator == op.id|stringformat:"s" %}selected{% endif %}>
+                    {{ op.username }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- ✅ AZIONE (SENZA MOSTRARE "None") -->
+    <div class="col-md-3">
+        <label>Azione</label>
+        <input
+            type="text"
+            name="action"
+            value="{{ selected_action|default_if_none:'' }}"
+            class="form-control"
+            placeholder="Es. TICKET CLOSED"
+        >
+    </div>
+
+    <div class="col-md-1 d-flex align-items-end">
+        <button class="btn btn-primary w-100">Filtra</button>
+    </div>
+
+</form>
+
+
+<div class="row">
+
+    <!-- ✅ GRAFICO OPERATORI -->
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h5>Attività per Operatore</h5>
+            <canvas id="operatorChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ✅ GRAFICO AZIONI -->
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h5>Distribuzione Azioni</h5>
+            <canvas id="actionChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<!-- ✅ PASSAGGIO DATI SICURO DJANGO → JAVASCRIPT -->
+{{ operator_labels|json_script:"operator-labels" }}
+{{ operator_values|json_script:"operator-values" }}
+{{ action_labels|json_script:"action-labels" }}
+{{ action_values|json_script:"action-values" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const operatorLabels = JSON.parse(document.getElementById("operator-labels").textContent);
+const operatorValues = JSON.parse(document.getElementById("operator-values").textContent);
+
+const actionLabels = JSON.parse(document.getElementById("action-labels").textContent);
+const actionValues = JSON.parse(document.getElementById("action-values").textContent);
+
+new Chart(document.getElementById("operatorChart"), {
+    type: "bar",
+    data: {
+        labels: operatorLabels,
+        datasets: [{
+            label: "Operazioni",
+            data: operatorValues
+        }]
+    }
+});
+
+new Chart(document.getElementById("actionChart"), {
+    type: "pie",
+    data: {
+        labels: actionLabels,
+        datasets: [{
+            data: actionValues
+        }]
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load role_tags %}
+
+{% block title %}Gestione utenti{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Gestione Utenti</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Ruolo</th>
+            <th>Azioni</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for u in users %}
+        <tr>
+            <td>{{ u.username }}</td>
+            <td>{{ u.email }}</td>
+            <td>
+                {% if u|has_group:"admin" %}
+                    <span class="badge bg-danger">Admin</span>
+                {% elif u|has_group:"operator" %}
+                    <span class="badge bg-primary">Operator</span>
+                {% else %}
+                    <span class="badge bg-warning text-dark">User</span>
+                {% endif %}
+            </td>
+
+            <td>
+                <a href="{% url 'admin_user_detail' u.id %}" class="btn btn-sm btn-info">Dettagli</a>
+                <a href="{% url 'admin_user_edit' u.id %}" class="btn btn-sm btn-warning">Modifica</a>
+                <a href="{% url 'admin_user_delete' u.id %}" 
+                   class="btn btn-sm btn-danger"
+                   onclick="return confirm('Sei sicuro di voler eliminare questo utente?');">
+                   Elimina
+                </a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">Nessun utente trovato.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

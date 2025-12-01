@@ -1,0 +1,25 @@
+# Virtual env
+venv/
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# DB
+*.sqlite3
+*.db
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+.antygravity/
+
+settings.py

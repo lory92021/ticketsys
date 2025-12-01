@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Operatore{% endblock %}
+
+{% block content %}
+<h2>Dashboard Operatore</h2>
+{% include "tickets/components/ticket_filters.html" %}
+
+<div class="mb-3">
+    <a href="{% url 'operator_assigned' %}" 
+       class="btn {% if active_tab == 'assigned' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        Ticket assegnati a me
+    </a>
+
+    <a href="{% url 'operator_open' %}" 
+       class="btn {% if active_tab == 'open' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        Ticket non assegnati (aperti)
+    </a>
+</div>
+
+<table class="table table-striped mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Titolo</th>
+            <th>Creato da</th>
+            <th>Stato</th>
+            <th>Azioni</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for t in tickets %}
+        <tr>
+            <td>{{ t.id }}</td>
+            <td>{{ t.title }}</td>
+            <td>{{ t.created_by.username }}</td>
+            <td>{{ t.get_status_display }}</td>
+            <td>
+                <a href="{% url 'ticket_detail' t.id %}" class="btn btn-sm btn-primary">Apri</a>
+
+                {% if active_tab == 'open' %}
+                    <a href="{% url 'ticket_assign' t.id %}" 
+                       class="btn btn-sm btn-warning">Prendi in carico</a>
+                {% endif %}
+
+                {% if active_tab == 'assigned' and t.status == 'in_progress' %}
+                    <a href="{% url 'ticket_close' t.id %}" 
+                       class="btn btn-sm btn-success">Chiudi</a>
+                {% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5" class="text-center">Nessun ticket trovato.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

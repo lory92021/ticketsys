@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% load static %}
+{% load role_tags %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Ticket #{{ ticket.id }} – {{ ticket.title }}</h2>
+
+    <!-- ================= DATI TICKET ================= -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <p><strong>Creato da:</strong> {{ ticket.created_by.username }}</p>
+            <p><strong>Assegnato a:</strong> {{ ticket.assigned_to.username|default:"-" }}</p>
+            <p><strong>Priorità:</strong> {{ ticket.get_priority_display }}</p>
+            <p><strong>Stato:</strong> {{ ticket.get_status_display }}</p>
+
+            <p class="mt-3">
+                <strong>Descrizione:</strong><br>
+                {{ ticket.description }}
+            </p>
+
+            <hr>
+
+            <div class="d-flex gap-2">
+
+                {# --- CHIUSURA TICKET (OPERATOR + ADMIN) --- #}
+                {% if is_operator or is_admin %}
+                    {% if ticket.status != 'closed' %}
+                        <a href="{% url 'ticket_close' ticket.id %}"
+                           class="btn btn-success">
+                            Chiudi ticket
+                        </a>
+                    {% endif %}
+                {% endif %}
+
+                {# --- RIASSEGNAZIONE (SOLO ADMIN) --- #}
+                {% if is_admin %}
+                    <a href="{% url 'ticket_reassign_view' ticket.id %}"
+                       class="btn btn-warning">
+                        Riassegna ticket
+                    </a>
+                {% endif %}
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= CHAT ================= -->
+    <div class="chat-box card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+            <strong>Messaggi</strong>
+        </div>
+
+        <div class="card-body chat-container">
+
+            {% if messages %}
+                {% for m in messages %}
+
+                    <div class="chat-row
+                        {% if m.sender|has_group:'operator' or m.sender.is_staff %}
+                            operator-msg
+                        {% else %}
+                            user-msg
+                        {% endif %}">
+
+                        <div class="chat-bubble">
+                            <div class="chat-meta">
+                                {{ m.sender.username }} · {{ m.created_at|date:"d/m/Y H:i" }}
+                            </div>
+
+                            <div class="chat-text">
+                                {{ m.text }}
+                            </div>
+
+                        </div>
+                    </div>
+
+                {% endfor %}
+            {% else %}
+                <p class="text-muted text-center">Nessun messaggio ancora.</p>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- ================= FORM INVIO + ALLEGATO ================= -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5>Invia un messaggio o un allegato</h5>
+
+            <form method="POST" enctype="multipart/form-data" id="message-form">
+                {% csrf_token %}
+
+                <!--  MESSAGGIO OPZIONALE -->
+                <textarea name="text" id="text-field"
+                          rows="3"
+                          class="form-control mb-3"
+                          placeholder="Scrivi un messaggio (opzionale)..."></textarea>
+
+                <!--  ALLEGATO -->
+                <div class="mb-3">
+                    <label class="form-label">Allegato (PDF, JPG, PNG)</label>
+                    <input type="file"
+                           name="attachment"
+                           id="file-field"
+                           class="form-control"
+                           accept=".pdf,.jpg,.jpeg,.png">
+                </div>
+
+                <button class="btn btn-primary">
+                    Invia
+                </button>
+            </form>
+
+            <!-- ✅ BLOCCO SUBMIT VUOTO -->
+            <script>
+            document.getElementById("message-form").addEventListener("submit", function(e) {
+                const text = document.getElementById("text-field").value.trim();
+                const file = document.getElementById("file-field").value;
+
+                if (text === "" && file === "") {
+                    e.preventDefault();
+                    alert("Devi inserire almeno un messaggio oppure un allegato.");
+                }
+            });
+            </script>
+
+        </div>
+    </div>
+
+   <!-- ================= ALLEGATI ================= -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-secondary text-white">
+        <strong>Allegati</strong>
+    </div>
+
+    <div class="card-body">
+
+        {% if attachments %}
+            <ul class="list-group">
+                {% for a in attachments %}
+                    <li class="list-group-item">
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>{{ a.file_name }}</strong>
+
+                            <div class="d-flex gap-2">
+                                <!-- ✅ PREVIEW -->
+                                <a href="{% url 'attachment_preview' a.id %}"
+                                   target="_blank"
+                                   class="btn btn-sm btn-info">
+                                    Visualizza
+                                </a>
+
+                                <!-- ✅ DOWNLOAD -->
+                                <a href="{% url 'secure_download' a.id %}"
+                                   class="btn btn-sm btn-primary">
+                                    Scarica
+                                </a>
+
+                                <!-- ❌ ELIMINA SOLO ADMIN -->
+                                {% if is_admin %}
+                                    <a href="{% url 'attachment_delete' a.id %}"
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Eliminare definitivamente questo allegato?');">
+                                       Elimina
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- ✅ ANTEPRIMA AUTOMATICA IMMAGINE -->
+                        {% if a.mime_type|slice:":5" == "image" %}
+                            <img src="{% url 'attachment_preview' a.id %}"
+                                 class="img-fluid rounded border mb-2"
+                                 style="max-height: 300px;">
+                        {% endif %}
+
+                        <!-- ✅ ANTEPRIMA PDF -->
+                        {% if a.mime_type == "application/pdf" %}
+                            <iframe src="{% url 'attachment_preview' a.id %}"
+                                    width="100%"
+                                    height="400px"
+                                    class="border rounded"></iframe>
+                        {% endif %}
+
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">Nessun allegato presente.</p>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}
