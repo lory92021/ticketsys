@@ -23,3 +23,6 @@ Thumbs.db
 .antygravity/
 
 settings.py
+
+secure_uploads/
+admin_actions.log
